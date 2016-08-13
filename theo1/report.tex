@@ -23,6 +23,159 @@ bottom=10mm,
 \textit{\large Shubham Pandey}         14679
 \end{center}
 
+\section{Non-Dominated Points}
+
+\subsection{Output Sensitive Algorithm}
+\subsubsection{Intuition}
+In divide step, we extract the non-dominated point with the help of which, we can remove maximum number of dominated points.\\ \\
+\textbf{Observation: }The points which are dominated by any point can be removed from the upcoming recursive calls\newline immediately.\\
+\textbf{Observation: }By choosing the point with maximum y-coordinate in the right half, we can eliminate a large chunk of points.
+
+\subsubsection{Algorithm}
+Consider the following pseudo-code of our algorithm :
+\begin{algorithm}
+\caption{Non Dominated Points}
+\label{ndp}
+\begin{algorithmic}[1]
+\Procedure{Staircase(A)}{}
+\If{$A == \phi $}
+\State return
+\EndIf
+\If{$|A| == 1 $} 
+\State return A
+\Else
+\State $x \gets $Median of A wrt x-coordinates \Comment{\parbox[t]{.2\linewidth}}{O(n)} 
+\State $R_x \gets $ Set of Points Right of x  \Comment{\parbox[t]{.2\linewidth}}{O(n)} 
+\State $L_x \gets $ Set of Points Left of x  \Comment{\parbox[t]{.2\linewidth}}{O(n)} 
+\State $y_{max} \gets$ Point with maximum y-coordinate in $R_x$  \Comment{\parbox[t]{.5\linewidth}}{O(n)} 
+\State $L_x \gets$ $L_x$ with points whose y-coordinates is greater than y of $y_{max}$  \Comment{\parbox[t]{.2\linewidth}}{O(n)} 
+\State $R_x \gets$ $L_x$ with points whose x-coordinates is greater than x of $y_{max}$  \Comment{\parbox[t]{.2\linewidth}}{O(n)} 
+\State $D_l \gets Staircase(L_x)$   \Comment{\parbox[t]{.2\linewidth}}{Recursive Call} 
+\State $D_r \gets Staircase(R_x)$ 
+\State return $D_l \cup D_r \cup y_{max} $
+\EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Time Complexity}
+We can evaluate the time complexity for this algorithm in the following way. Let the total number of points be \emph{N} and the number of non-dominated points be \emph{h}. Let at any stage, the number of points in a recursive call be \emph{n}. We will try to find the number of recursive calls where $n \geq \frac{N}{h}$ and where $n < \frac{N}{h}$. \\ \\
+\textbf{ Case 1 : $n < \frac{N}{h}$} \\
+\textbf{Observation} If at any stage there is only one non-dominated point in a recursive call, then it will lead to deletion of all the points and the non-dominated point will be returned. \\
+By this observation, we can see that there can be atmost \emph{h} recursive calls, where $n < \frac{N}{h}$. Since each of these calls take time O($\frac{N}{h}$), the total time taken in all the recursive calls where $n < \frac{N}{h}$ is O(N).\\ \\
+\textbf{Case 2:} $n \geq \frac{N}{h}$ \\
+Now, 
+
+
+
+\subsection{Extension to 3 Dimensions}
+\subsubsection{Online 2D}
+\textbf{Algorithm} \\
+We will be using an \emph{Augmented Balanced Binary Search Tree}. The tree should be constructed with respect to the x-coordinate of the input points. Each node is also augmented with the respective y-coordinate. \\
+
+Consider the input to be the stream of points $P = \{p_1,p_2,p_3 ... p_n\}$. Initially, the first point($p_1$) is assigned as the root of the tree. At the time of insertion of \emph{$i^{th}$} point ($p_i$), the tree stores all the non-dominated points for the set $S_{i-1} = \{p_1,...p_{i-1} \}$. The points are inserted with respect to their x-coordinates(x($p_i$)) and each node is augmented with the corresponding y-coordinate(y($p_i$)). Consider the following pseudo-code for full details.\\ \\
+\textbf{Pseudo-Code}
+\begin{algorithm}
+\caption{Online2D}
+\label{online}
+\begin{algorithmic}[1]
+\Procedure{online\_NDP(P)}{}
+\State root $\gets p_1$ \Comment{\parbox[t]{.6\linewidth}}{Initialisation of Tree} 
+\State i $\gets 2$
+\While{i $\leq$ n}
+\State Next $\gets$ FindSuccessor($p_i$)\Comment{\parbox[t]{.6\linewidth}}{Returns the point in the tree with x-coordinate just greater than x($p_i$)} 
+\If {Next is NULL}
+\State Insert($p_i$)\Comment{\parbox[t]{.6\linewidth}}{Point $p_i$ is inserted in the tree}
+\ElsIf{y(Next) $<$ y($p_i$)} \Comment{\parbox[t]{.6\linewidth}}{$p_i$ is a non-dominated point for $S_{i}$} 
+\State Insert($p_i$) 
+\State Prev $\gets$ FindPredecessor($p_i$) \Comment{\parbox[t]{.6\linewidth}}{Returns the point in the tree with x-coordinate just less than x($p_i$)} 
+\If{Prev is NULL}
+\State Insert($p_i$)
+\Else
+\While{y(Prev) $<$ y($p_i$)}  \Comment{\parbox[t]{.6\linewidth}}{Deletion of points in the tree Dominated by $p_i$} 
+\State Delete(Prev)  \Comment{\parbox[t]{.6\linewidth}}{Deletes the Point from the tree} 
+\State Prev $\gets$ FindPredecessor($p_i$)
+\EndWhile
+\EndIf
+\EndIf
+\State i++
+\EndWhile
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+\\
+\textbf{Time Complexity}\\
+We already that maintaining a balanced binary tree under n insertions takes O(nlog(n)) time. Also, maintaining a balanced binary tree under n deletions take O(nlog(n)) time.\\ \\
+If there are n nodes in the tree. Upon insertion of \emph{i}th point, the size of the tree is atmost \emph{i}. And, since we do a single pass through the set P, maximum number of insertions and deletions can be \emph{i}, when we reach $p_i$. Thus, total time complexity after i insertions is O(ilog(i)).
+
+\subsubsection{3D}
+\textbf{Algorithm}\\
+We can solve this problem using the \emph{Online2D}. Consider the inpur to be the set $S$, consisting of n three dimensional points. First, sort the given \emph{n} points w.r.t to their z-coordinates in decreasing order. Let the sequence thus generated be $Q = \{q_1,q_2,... q_n\}$, where each element is three dimensional. Now, using elements of Q one by one, and projecting each point in x-y plane we get another sequence $P= \{p_1,p_2... p_n\}$, where each point is two dimensional. We can now use this sequence as before to find the non-dominating points for the entire set. Consider the following Pseudo-Code :\\
+\textbf{Pseudo-Code}
+\begin{algorithm}
+\caption{3D Non-Dominated Points}
+\label{3d}
+\begin{algorithmic}[1]
+\Procedure{3D(S)}{}
+\State Q $\gets$ ReverseSort(S,z)  \Comment{\parbox[t]{.6\linewidth}}{Sort the set S wrt z-coordinates in decreasing order}
+\State P $\gets$ Project(Q,x-y)  \Comment{\parbox[t]{.6\linewidth}}{Project the points in x-y plane}
+\State TreeNDP $\gets$ Online\_NDP(P)   \Comment{\parbox[t]{.6\linewidth}}{Returns the tree with non-dominated points}
+\State Inorder(TreeNDP)   \Comment{\parbox[t]{.6\linewidth}}{Traverse Tree to get all the Non-Dominated Points}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+\\
+\textbf{Time Complexity}\\
+\emph{Sorting} O(nlog(n))\\
+\emph{Projection} O(n)\\
+\emph{Online 2D} Since there are n points, from the previous analysis ,the tree is populated in time O(nlog(n)).\\
+\emph{Traversal} Traversal takes time O(n) \\
+\emph{Total Time} Thus, the total time taken is of O(nlog(n)).
+ 
+
+\section{A Computational problem of an Experimental Physicist }
+
+\subsection{Intuition}
+
+We want to compute the following for each charge $q_j$ :
+$$ F_j = \sum_{i<j}\frac{kq_iq_j}{(j-i)^{2}} - \sum_{i>j}\frac{kq_iq_j}{(j-i)^{2}}$$
+
+\textbf{Observation: } Charges are at integral points i.e. 1,2,3 and so on. Thus, utilizing the fact that adjacent charges are equidistant, we can compute the total force on each charge by Dot Product of two vectors which are :
+$$Q_j = \{0,0, ... 0, q_1,q_2, ... q_n,0,0 ... 0\}$$
+$$D = \{ \frac{-1}{(n-1)^2},\frac{-1}{(n-2)^2},... \frac{-1}{(1)^2},0, \frac{1}{(1)^2},... \frac{1}{(n-1)^2}\}$$
+Vector $Q_j$ has \textit{n-j-1} 0s in beginning and \textit{j} 0s in the end and both the vectors are of (2n-1)-Dimensional. The force thus becomes:
+$$F_j= kq_jQ_jD^{T}$$
+
+\textbf{Observation: }We are doing a similar computation again and again. Thus, we can transform this into the problem of polynomial multiplication where each coefficient gives the electric field at one of the charge positions.
+
+\subsection{Algorithm}
+
+Consider the following polynomials :
+$$Q(x) = q_1x^0 + q_2x^1 + ... + q_nx^{n-1}$$
+$$D(x) = \frac{-1}{(n-1)^2}x^0 + \frac{-1}{(n-2)^2}x^1 + ... \frac{-1}{(1)^2}x^{n-2} +0x^{n-1}+ \frac{1}{(1)^2}x^{n}+...+ \frac{1}{(n-1)^2}x^{2n-1}$$
+
+Consider the polynomial F(x) :
+$$F(x) = Q(x)D(x)$$
+
+Coefficient of $x^{2n-2-j}$ in F(x): 
+$$ C_j = \sum_{i<j}\frac{q_i}{(j-i)^{2}} - \sum_{i>j}\frac{q_i}{(j-i)^{2}}$$ 
+
+Thus force on charge $q_j$ is :
+$$F_j =  kq_jC_j$$
+
+Thus, we just need to compute the polynomial F(x) and forces can be calculated by taking the coefficients.
+
+\subsection{Time Complexity}
+\subsubsection{Polynomial Multiplication}
+As we saw in the class that given two polynomials of degree less than n, their product can be computed in time O(nlog(n)).\\
+Degree of Q(x) = n-1\\
+Degree of D(x) = 2n-1\\
+As degree of both polynomials are of O(n), total time taken is O(nlog(n)).
+
+\subsubsection{Force Computation}
+After computing the product, the force on all the charges can be computed in O(n) time.\\
+Thus, Total Time Complexity of this algorithm is O(nlog(n)).
+
 \end{document}
 
 
