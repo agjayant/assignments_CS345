@@ -48,8 +48,8 @@ Consider the following pseudo-code of our algorithm :
 \State $R_x \gets $ Set of Points Right of x  \Comment{\parbox[t]{.2\linewidth}}{O(n)} 
 \State $L_x \gets $ Set of Points Left of x  \Comment{\parbox[t]{.2\linewidth}}{O(n)} 
 \State $y_{max} \gets$ Point with maximum y-coordinate in $R_x$  \Comment{\parbox[t]{.5\linewidth}}{O(n)} 
-\State $L_x \gets$ $L_x$ with points whose y-coordinates is greater than y of $y_{max}$  \Comment{\parbox[t]{.2\linewidth}}{O(n)} 
-\State $R_x \gets$ $L_x$ with points whose x-coordinates is greater than x of $y_{max}$  \Comment{\parbox[t]{.2\linewidth}}{O(n)} 
+\State $L_x \gets$ $L_x$ with points whose y-coordinates is greater or equal than y of $y_{max}$  \Comment{\parbox[t]{.2\linewidth}}{O(n)} 
+\State $R_x \gets$ $L_x$ with points whose x-coordinates is greater or equal than x of $y_{max}$  \Comment{\parbox[t]{.2\linewidth}}{O(n)} 
 \State $D_l \gets Staircase(L_x)$   \Comment{\parbox[t]{.2\linewidth}}{Recursive Call} 
 \State $D_r \gets Staircase(R_x)$ 
 \State return $D_l \cup D_r \cup y_{max} $
@@ -58,13 +58,37 @@ Consider the following pseudo-code of our algorithm :
 \end{algorithmic}
 \end{algorithm}
 
+\subsubsection{Proof of Correctness}
+We can divide this proof in two parts:\\ \\
+\textbf{No \emph{Non-Dominated Point} is Deleted}: Points deleted in $L_x$ have y-coordinate less than that of $y_{max}$ and since $y_{max}$ lies to the right of median, their x-coordinate is also less than $x(y_{max})$. For $R_x$, $y_{max}$ has the maximum y-coordinate and the points that are deleted have x-coordinates less than $x(y_{max})$.\\ \\
+\textbf{No \emph{Dominated Point} is Transformed into a \emph{Non-Dominated Point}}:
+\begin{itemize}
+\item \emph{First}, Clearly $y_{max}$ is a non-dominated point because $x(y_{max})$ is greater than any point in $L_x$ and $y(y_{max})$ is greater than any point in $R_x$. 
+\item \emph{Second}, all points in $D_r$ are non-dominated for $R_x$ and have x-coordinates greater than any point in $L_x$. They are thus Non-dominated points for the entire set.
+\item \emph{Third}, all points in $D_l$ are non-dominated for $L_x$ and have y-coordinate greater than $y(y_{max})$, whose y-coordinate is in turn greater than any point in $R_x$.  They are thus Non-dominated points for the entire set. \\
+\end{itemize}
+
+Combining the above two observations ensure the correctness of Procedure \emph{Staircase}.
+
+
 \subsubsection{Time Complexity}
 We can evaluate the time complexity for this algorithm in the following way. Let the total number of points be \emph{N} and the number of non-dominated points be \emph{h}. Let at any stage, the number of points in a recursive call be \emph{n}. We will try to find the number of recursive calls where $n \geq \frac{N}{h}$ and where $n < \frac{N}{h}$. \\ \\
 \textbf{ Case 1 : $n < \frac{N}{h}$} \\
 \textbf{Observation} If at any stage there is only one non-dominated point in a recursive call, then it will lead to deletion of all the points and the non-dominated point will be returned. \\
-By this observation, we can see that there can be atmost \emph{h} recursive calls, where $n < \frac{N}{h}$. Since each of these calls take time O($\frac{N}{h}$), the total time taken in all the recursive calls where $n < \frac{N}{h}$ is O(N).\\ \\
+By this observation, we can see that there can be at most \emph{h} recursive calls, where $n < \frac{N}{h}$. Since each of these calls take time O($\frac{N}{h}$), the total time taken in all the recursive calls where $n < \frac{N}{h}$ is O(N).\\ \\
 \textbf{Case 2:} $n \geq \frac{N}{h}$ \\
-Now, 
+Now, Consider the time taken by the algorithm to be $T(N,h)$, then:
+$$T(N,h) = cN + T (\frac{N}{2},h_1) + T(\frac{N}{2},h-h_1)$$
+where c is some constant and $h_1$ is the number of non-dominated points in the right half and thus the number of non-dominated points in the left half is $h-h_1$. Now, going further in the recursive calls, the terms will unfold as:
+$$T(N,h) = cN + c\frac{N}{2} + T (\frac{N}{4},h_3) + T(\frac{N}{4},h1-h_3) + c\frac{N}{2} + T (\frac{N}{4},h_4) + T(\frac{N}{4},h-h_1-h_4)$$
+$$T(N,h) = 2cN + T (\frac{N}{4},h_3) + T(\frac{N}{4},h1-h_3) T (\frac{N}{4},h_4) + T(\frac{N}{4},h-h_1-h_4)$$
+After k recursive calls :
+$$T(N,h) = kcN + T (n,\hat{h_1}) + T(n,\hat{h_2})+ ...T(n,\hat{h_{2^k}})$$
+Every recursive call outputs a non-dominating point, thus after $k^{th}$ level of recursion, $2^k$ non-dominating points have been identified. Thus, there can be only $log(h)$ recursive levels. Also, after $log(h)$ levels, the number of points in the recursive call fall below $\frac{N}{h}$. We have already seen that the total time complexity of these recursive calls is O(N). Thus, at $k=log(h)$ :
+$$T(N,h) = log(h)cN + O(N) $$
+or $$T(N,h) = O(Nlog(h)) $$ 
+
+Therefore, combining the above two cases, we can see that the time complexity of this algorithm is O(Nlog(h)).
 
 
 
@@ -73,14 +97,13 @@ Now,
 \textbf{Algorithm} \\
 We will be using an \emph{Augmented Balanced Binary Search Tree}. The tree should be constructed with respect to the x-coordinate of the input points. Each node is also augmented with the respective y-coordinate. \\
 
-Consider the input to be the stream of points $P = \{p_1,p_2,p_3 ... p_n\}$. Initially, the first point($p_1$) is assigned as the root of the tree. At the time of insertion of \emph{$i^{th}$} point ($p_i$), the tree stores all the non-dominated points for the set $S_{i-1} = \{p_1,...p_{i-1} \}$. The points are inserted with respect to their x-coordinates(x($p_i$)) and each node is augmented with the corresponding y-coordinate(y($p_i$)). Consider the following pseudo-code for full details.\\ \\
-\textbf{Pseudo-Code}
+Consider the input to be the stream of points $P = \{p_1,p_2,p_3 ... p_n\}$. Initially, the first point($p_1$) is assigned as the root of the tree. At the time of insertion of \emph{$i^{th}$} point ($p_i$), the tree stores all the non-dominated points for the set $S_{i-1} = \{p_1,...p_{i-1} \}$. The points are inserted with respect to their x-coordinates(x($p_i$)) and each node is augmented with the corresponding y-coordinate(y($p_i$)). The main idea is that, if the point whose x-coordinate is just greater than $p_i$ in the tree, has a y-coordinate less than $y(p_i)$, then $p_i$ is a non-dominated point. Consider the following pseudo-code(Algorithm \ref{online}) for full details.\\ \\
 \begin{algorithm}
 \caption{Online2D}
 \label{online}
 \begin{algorithmic}[1]
 \Procedure{online\_NDP(P)}{}
-\State root $\gets p_1$ \Comment{\parbox[t]{.6\linewidth}}{Initialisation of Tree} 
+\State root $\gets p_1$ \Comment{\parbox[t]{.6\linewidth}}{Initialization of Tree} 
 \State i $\gets 2$
 \While{i $\leq$ n}
 \State Next $\gets$ FindSuccessor($p_i$)\Comment{\parbox[t]{.6\linewidth}}{Returns the point in the tree with x-coordinate just greater than x($p_i$)} 
@@ -104,14 +127,19 @@ Consider the input to be the stream of points $P = \{p_1,p_2,p_3 ... p_n\}$. Ini
 \end{algorithmic}
 \end{algorithm}
 \\
-\textbf{Time Complexity}\\
+\textbf{Proof of Correctness}(Algorithm \ref{online})
+\begin{itemize}
+\item \emph{Every point that is inserted in the tree is a non-dominated point for set $S_i$}. Clearly, a point $p_i$ is inserted only when the point with the x-coordinate just greater than $x(p_i)$, (Next), has its' y-coordinate less than $y(p_i)$. All other points with x-coordinate greater than $x(p_i)$ have their y-coordinates less than $y(Next)$, and thus no point already in the tree can dominate $p_i$.
+\item \emph{Every point that is deleted is a dominated point}. A point is deleted only when its' x-coodinate and y-coordinate are both less than those of $p_i$, thus it is dominated by $p_i$.
+\item \emph{No Non-Dominated Point is skipped while insertion}. If $p_i$ is a non-dominated point, then all the points with x-coordinate greater than $x(p_i)$ must have their y-coordinates less than $y(p_i)$. Thus, for each non-dominated point $p_i$, the condition $y(Next) < y(p_i)$ is always true.
+\end{itemize}
+\textbf{Time Complexity} (Algorithm \ref{online})\\
 We already that maintaining a balanced binary tree under n insertions takes O(nlog(n)) time. Also, maintaining a balanced binary tree under n deletions take O(nlog(n)) time.\\ \\
-If there are n nodes in the tree. Upon insertion of \emph{i}th point, the size of the tree is atmost \emph{i}. And, since we do a single pass through the set P, maximum number of insertions and deletions can be \emph{i}, when we reach $p_i$. Thus, total time complexity after i insertions is O(ilog(i)).
+If there are n nodes in the tree. Upon insertion of \emph{i}th point, the size of the tree is at most \emph{i}. And, since we do a \newline single pass through the set P, maximum number of insertions and deletions can be \emph{i}, when we reach $p_i$. Thus, total time complexity after i insertions is O(ilog(i)).
 
 \subsubsection{3D}
 \textbf{Algorithm}\\
-We can solve this problem using the \emph{Online2D}. Consider the inpur to be the set $S$, consisting of n three dimensional points. First, sort the given \emph{n} points w.r.t to their z-coordinates in decreasing order. Let the sequence thus generated be $Q = \{q_1,q_2,... q_n\}$, where each element is three dimensional. Now, using elements of Q one by one, and projecting each point in x-y plane we get another sequence $P= \{p_1,p_2... p_n\}$, where each point is two dimensional. We can now use this sequence as before to find the non-dominating points for the entire set. Consider the following Pseudo-Code :\\
-\textbf{Pseudo-Code}
+We can solve this problem using the \emph{Online2D}. Consider the inpur to be the set $S$, consisting of n three dimensional points. First, sort the given \emph{n} points w.r.t to their z-coordinates in decreasing order. Let the sequence thus generated be $Q = \{q_1,q_2,... q_n\}$, where each element is three dimensional. Now, using elements of Q one by one, and projecting each point in x-y plane we get another sequence $P= \{p_1,p_2... p_n\}$, where each point is two dimensional. We can now use this sequence as before to find the non-dominating points for the entire set. Consider the following Pseudo-Code (Algorithm \ref{3d}):\\
 \begin{algorithm}
 \caption{3D Non-Dominated Points}
 \label{3d}
@@ -125,7 +153,9 @@ We can solve this problem using the \emph{Online2D}. Consider the inpur to be th
 \end{algorithmic}
 \end{algorithm}
 \\
-\textbf{Time Complexity}\\
+\textbf{Proof of Correctness}(Algorithm \ref{3d})\\
+The points in sequence P are sorted with respect to their z-coordinates. Thus, if a point is a non-dominated point with respect to the x-y plane, it can not dominate any previous point in the sequence wrt z, since its z-coordinate is less than any previous point.\\ \\
+\textbf{Time Complexity} (Algorithm \ref{3d})\\
 \emph{Sorting} O(nlog(n))\\
 \emph{Projection} O(n)\\
 \emph{Online 2D} Since there are n points, from the previous analysis ,the tree is populated in time O(nlog(n)).\\
@@ -157,13 +187,25 @@ $$D(x) = \frac{-1}{(n-1)^2}x^0 + \frac{-1}{(n-2)^2}x^1 + ... \frac{-1}{(1)^2}x^{
 Consider the polynomial F(x) :
 $$F(x) = Q(x)D(x)$$
 
-Coefficient of $x^{2n-2-j}$ in F(x): 
+Coefficient of $x^{n-2+j}$ in F(x): 
 $$ C_j = \sum_{i<j}\frac{q_i}{(j-i)^{2}} - \sum_{i>j}\frac{q_i}{(j-i)^{2}}$$ 
 
 Thus force on charge $q_j$ is :
 $$F_j =  kq_jC_j$$
 
 Thus, we just need to compute the polynomial F(x) and forces can be calculated by taking the coefficients.
+\subsection{Proof of Correctness}
+We can verify that the algorithm is correct by verifying the coefficients:
+Clearly, for $j=1$, (coeff of $x^{n-1}$):
+$$C_1 = q_1*0+ q_2*\frac{-1}{(1)^2} + q_3*\frac{-1}{(2)^2}... + q_n*\frac{-1}{(n-1)^2}$$, Also, the force becomes: 
+$$F_1 = kq_1C_1$$
+$$F_1 = \frac{-kq_1q_2}{1} + \frac{-kq_1q_3}{4}+ ... \frac{-kq_1q_n}{(n-1)^2}$$.
+For any j, (Coeff of $x^{n-2+j}$)
+$$C_j = q_1*\frac{1}{(j-1)^2} +q_2*\frac{1}{(j-2)^2} ...+ q_{j-1}*\frac{1}{1^2} - q_{j+1}*\frac{-1}{(1)^2}... - q_n*\frac{-1}{(n-j)^2}  $$
+$$ C_j = \sum_{i<j}\frac{q_i}{(j-i)^{2}} - \sum_{i>j}\frac{q_i}{(j-i)^{2}}$$ 
+
+The force on $q_j$. thus becomes: 
+$$ F_j = \sum_{i<j}\frac{kq_jq_i}{(j-i)^{2}} - \sum_{i>j}\frac{kq_jq_i}{(j-i)^{2}}$$ 
 
 \subsection{Time Complexity}
 \subsubsection{Polynomial Multiplication}
