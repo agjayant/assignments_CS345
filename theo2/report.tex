@@ -23,6 +23,95 @@ bottom=10mm,
 \textit{\large Shubham Pandey}         14679
 \end{center}
 
+\section{Hierarchical Metric}
+\subsection{Intuition}
+The greedy step for this problem is inspired by solution to problems like Huffman's Code and MST discussed in class. The greedy step involves combining two trees, which have minimum distance out of multiple parallely growing trees. A tree in the step acts like a vertex, and adjacency list of that vertex contains minimum weight edges from all the vertices in this tree to other trees. Consider the following algorithm for clarity.
+
+\subsection{Algorithm}
+We first begin with n different trees each having a single node, containing a vertex from the graph and h value at that node is assigned 0 (as given in the problem statement). Our objective is to construct the tree \textbf{$T^*$} from these smaller trees. Let any stage the set of trees be \textbf{S}. Finally, \textbf{S} will contain a single element , \textbf{$T^*$}.
+\subsubsection{Data Structures}
+
+\textbf{Initialisation: }
+\begin{itemize}
+\item For each vertex $v \in V$, find the closest neighbor and add that vertex as the first element of the adjacency list of v.
+\item Construct a BST \textbf{B}, according to weight of edge between the vertex and its first element of Adjacency list. The vertex is key and each node is augmented with the adjacency list of the vertex. 
+\item Each node is also augmented with a pointer to root of the tree containing the vertex. Clearly, Initially the root is the leaf node itself.
+\end{itemize}
+\textbf{Note:} At any stage, a node in \textbf{B} represents all the vertices contained in the tree T( $\in S$), whose root is augmented in that node. Also, the adjacency list in the node is the merged list of all the adjacency lists of the vertices in T. There exists a clear bijection between nodes of B and elements(trees) of S. Each node in B has its own corresponding tree in S.
+
+\subsubsection{Greedy Step}
+Our objective is to combine the two trees in S, which contain the vertices having the minimum weight edge among all possible edges between vertices in \textbf{B}. \\
+\par Extract the minimum two nodes($u^*$,$v^*$) from B. These two nodes will have the edge with minimum weight between them out of all the edges between vertices/nodes of B.\\
+\par \textbf{Combine Step in S: }Combine the trees($T_{u^*}$,$T_{v^*}$) in S, corresponding to these two vertices. Simply. make a new node($T_{w^*}$) whose h value is the weight of the edge between those vertices in B and its children are the correspoding trees in S.\\
+\par \textbf{Combine Step in B: }Make a new node($w^*$) which contains the pointer to the $T_{w^*}$ in the above step. Now, we also have to compute the merged adjacency list for $w^*$. It should not have any vertex from $T_{u^*}$ and $T_{v^*}$ and also it should not have any repetition. \\
+
+For merging the lists, use a temporary additional array \textbf{A} of size n where each element is initialised to 0. Traverse all the vertices in the $T_{w^*}$ and assign -1 to the corresponding index for each vertex. \\
+
+Now, to have the minimum edge from $w^*$ to any vertex in its' adjacency list, we have to keep the minimum weight edge to that vertex from $u^*$ and $v^*$, since both $u^*$ and $v^*$ can have an edge to that vertex. For this, during merging the two lists, after including a vertex to the new list, keep a pointer to that vertex(in the new list) to the corresponding index in A. Insert a vertex in the new list only if the corresponding index in A contains 0. If the entry is -1, do nothing. Otherwise, we have to compare with the edge weight of the already inserted instance, and keep the minimum.\\
+
+Now, do one more scan through the new list and add the closest neighbor to the beginning of the list.
+
+\textbf{Insert $w^*$ in B: }Let the first vertex in the new list be x. Then, insert $w^*$ in B according to the distance between $w^*$ and x.\\
+
+Clearly, \textbf{we now have a smaller instance of B, \emph{$B^{'}$}. Also, the number of trees in S have reduced by one and we get \emph{$S^{'}$}}.
+\newpage
+
+\subsection{Theorem}
+
+\subsection{Pseudo-Code}
+Consider the following psedo-code which has the fastest implementation of the above algorithm.
+\begin{algorithm}
+\caption{Hierarchical Metric}
+\label{hm}
+\begin{algorithmic}[1]
+\Procedure{Hierarchical(G)}{}
+\State Initialise S 
+\State Add closest neighbor to the front in all adjacency lists \Comment{\parbox[t]{.2\linewidth}}{O($n^2$)} 
+\State Construct BST B \Comment{\parbox[t]{.2\linewidth}}{O(nlog(n))} 
+\While { $Size(B) > 1$ } \Comment{\parbox[t]{.2\linewidth}}{ n-1 iterations} 
+\State ( $B^{'}$, $S^{'}$ ) $\gets$ Greedy Step (B, S) \Comment{\parbox[t]{.2\linewidth}}{O(n)} 
+\EndWhile
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Time Compexity}
+\emph{Constructing B:} O($n^2$ + nlog(n))\\
+\emph{Greedy Step:} O(n)\\
+\emph{Total Iterations Required:} O(n)\\
+\emph{Cost of while loop:} O($n^2$)\\
+\emph{Total Time Complexity: } O($n^2$)
+
+\subsection{Note}
+
+\section{Problem 2}
+\subsection{Intuition}
+We have to keep $O(\sqrt{n})$ edges for each vertex on an average. Since, maximum number of edges allowed are $O(n^{3/2})$, we can have O(n) nuber of edges for O($\sqrt{n}$) number of vertices.
+
+\subsection{Algorithm}
+\subsubsection{Pseudo-Code}
+\begin{algorithm}
+\caption{An inspirational Algorithm}
+\label{hm}
+\begin{algorithmic}[1]
+\State $E_S \gets \phi$
+\While { size(E) $>$ 0 }  \Comment{\parbox[t]{.6\linewidth}}{ We can also stop when size(E) $<$ $n^{3/2}$ }
+\State Pick any vertex v from G
+\If {degree(v) $\leq \sqrt{n}$ }
+\State Add all edges incident on v to $E_S$
+\State Remove v and all edges incident on v from G
+\Else
+\State Remove one of the edges from v from all 4-length cycles containing v formed by edges to already covered vertices
+\State Remove all direct edges between uncovered neighbors(3-length cycle) and mark the uncovered neighbors as covered
+\State Add all edges incident on v to $E_s$ and remove v from G if the number of uncovered edges is less than $\sqrt{n}$
+\EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+\subsubsection{Description}
+If the degree(v) $> \sqrt{n}$, we have to remove all the internal edges between neighbors of v i.e. a cycle of size 3, because the vertex can be reached through 
+
+
 \end{document}
 
 
