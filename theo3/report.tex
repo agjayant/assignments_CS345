@@ -1,0 +1,138 @@
+\documentclass{article}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\geometry{
+a4paper,
+right=20mm,
+left=20mm,
+top=20mm,
+bottom=20mm,	
+}
+
+\begin{document}
+
+\pagenumbering{gobble}
+
+\begin{center}
+\textbf{\Large Theoretical Assignment 3 : CS345} \\
+\textit{\large Jayant Agrawal}         14282 \\
+\textit{\large Shubham Pandey}         14679
+\end{center}
+
+\section{Unique Path ID}
+\subsection{Intuition}
+Since the reduced CFG is a DAG, we can utilize the properties of Topological Ordering. We will calculate the number of paths from a given vertex to the \textit{exit} node, \emph{t}, for each node using topological ordering. Using this, we can assign weights to edges suitably.
+
+\subsection{Algorithm}
+\subsubsection{Description}
+First, compute array \emph{A}, which stores vertices in topological order.\\ \\
+\textbf{Number of Paths for Each Node}\\
+$$Paths(v) = \sum_{\{u | Parent(u)=v\}}Paths(u)$$
+First, assign 1 to $Paths(t)$, where $t$ is exit vertex, also the last vertex in \emph{A}. Now, iterate over \emph{A}, from last to first vertex, and using the above formula, assign $Paths(v)$, for each $v \in A$. Since, A is the topological order for the DAG, so children of a vertex will always come later in A and thus, we can iterate backwards.\\ \\
+\textbf{Assigning Weights}\\ \\
+Starting from the root, $s$, for each $v$, let the list of children be $S_v$. Assign the weight of the first edge to zero.
+$$Weight(v,u) = \sum_{\{x|x \text{ comes before u in } S_v\}}Paths(x)$$
+Starting from the second vertex, we assign the weight of the edge from $v$ to the vertex to be the sum of number of paths of all the siblings coming before in $S_v$.
+
+\subsubsection{Pseudo Code}
+\begin{algorithm}
+\caption{Unique Path ID}
+\label{hm}
+\begin{algorithmic}[1]
+\Procedure{UniqPath(G)}{}
+\State A $\gets$ TopologicalOrdering(G) \Comment{\parbox[t]{.3\linewidth}}{O(n + m)}
+\State $Paths(A_n) \gets 1$ \Comment{\parbox[t]{.3\linewidth}}{$Paths(t)=1$}
+\For { i = n-1 to 1 }
+\State $Paths(A_i) = \sum_{\{u | Parent(u)=A_i\}}Paths(u)$ \Comment{\parbox[t]{.3\linewidth}}{O(Neighbours($A_i$))}
+\EndFor \Comment{\parbox[t]{.3\linewidth}}{O(n + m)}
+\For {i= 1 to n-1  }
+\State $Weight(A_i,k) = 0$ \Comment{\parbox[t]{.3\linewidth}}{k is first child of $A_i$ in A}
+\For {All children of $A_i$, in order, except k}
+\State $Weight(A_i,u) = Paths(x) + Weight(A_i,x) $
+\EndFor
+\EndFor \Comment{\parbox[t]{.3\linewidth}}{O(n + m)}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Time Complexity}
+\emph{Topological Ordering: } O(m+n)\\
+\emph{Computing Number of Paths from all nodes: } O(m+n)\\
+\emph{Assigning Edge Weights:} O(m+n)\\
+\emph{Total Time: }O(m+n)
+\subsection{Proof of Correctness}
+Consider a node v, and the list of its children be $S_v = {v_1,v_2 ... v_k}$.  \\ \\
+\emph{Claim : If we prove that all the paths from v to t have unique ID, then we can inductively show that all the paths from s to t get unique IDs} \\
+\emph{Base case: } For node t, there is one path from t to t. \\
+\emph{Hypothesis: } For v, path ids are unique from $v_i \in S_v$ to t.\\
+\emph{Induction Step: }Consider children $v_i$ and $v_{i+1}$. Weight of e($v,v_{i+1}$) is assigned as:
+$$e(v,v_{i+1}) = e(v,v_i)+ Paths(v_i)$$
+$$e(v,v_{i+1}) - e(v,v_i) = Paths(v_i)$$
+Clearly, path ID of any path passing through $v_{i+1}$ is shifted by $Paths(v_i)$. Thus, we do not have any overlap between path IDs and also we have not wasted any path ID. The paths from v to t passing through $v_{i+1}$ have ids in range $[e(v,v_{i+1}),e(v,v_{i+1})+ Paths(v_{i+1})-1]$.\\
+So, we show that we have unique path IDs at each node. This implies path IDs from root, s, are also unique.\\ \\
+\emph{Path ID in range [0,N-1]}: Since, we are assigning unique path IDs, and by above claim, by induction, we show that the path ids are in range [0,N-1].
+
+\section{Atleast One Path}
+\subsection{Intuition}
+Considering SCCs ($G' = (V',E')$) of the graph G = (V, E), there exists only one-way path between a pair of SCC, otherwise they will belong to the same SCC. Also SCCs form a DAG, thus we can uilize the topological ordering.
+
+\subsection{Algorithm}
+\subsubsection{Description}
+First compute SCCs(G') for the graph G. \\ There exists a path between any pair of vertices in the same SCC by defination.\\ 
+Now, we have to check for paths between SCCs only.\\ Compute topological ordering \emph{A} for G'. \\ \\
+\textbf{Observation} \\ 
+Consider two adjacent nodes($u',v'$) in \emph{A}. $u'$ comes before $v'$ in \emph{A}.
+\begin{itemize}
+\item There can not be an edge from $v'$ to $u'$, since they are in topological order.
+\item So, there must be a path from $u'$ to $v'$ so that the vertices in $u'$ have a path to the vertices in $v'$.
+\item $v'$ can not have a back edge in $A$, because of topological ordering.
+\item So, there must be an edge from $u'$ and $v'$ in $G'$.
+\end{itemize}
+\textbf{Verifying the Claim} \\
+Simply, iterate over $A$, and check each pair of adjacent nodes. If they do not have an edge, then the claim is invalid, otherwise valid.\newpage
+
+\subsubsection{Pseudo -Code}
+\begin{algorithm}
+\caption{Atleast One Path}
+\label{one}
+\begin{algorithmic}[1]
+\Procedure{OnePath(G)}{}
+\State G'(V', E') $\gets$ SCCs(G) \Comment{\parbox[t]{.3\linewidth}}{O(n + m)}
+\State A $\gets$ Topological Ordering of G' \Comment{\parbox[t]{.3\linewidth}}{O(n + m)}
+\State ClaimValid $\gets$ True
+\For {i = 1 to n-1 }
+\If { $e(A_i, A_{i+1}) \notin E' $  }
+\State ClaimValid $\gets$ False
+\State break
+\EndIf
+\EndFor \Comment{\parbox[t]{.3\linewidth}}{O(n) , Size(V') $\leq$ Size(V)}
+\State return ClaimValid
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Time Complexity}
+\emph{Computing G' (SCCs) : } O(m+n) \\
+\emph{Topological Ordering: } O(m+n)\\
+\emph{Verifying Claim:} O(n)\\
+\emph{Total Time: }O(m+n)
+
+\subsection{Proof of Correctness}
+There may be two cases, the vertices either belong to the same SCC or they may belong to different nodes in V'.\\ \\
+\textbf{Vertices in a SCC}\\
+By defination of SCC, there exists a path between each pair of vertices in the same SCC. \\ \\
+\textbf{Vertices in Different SCCs}\\
+Different SCCs represent different nodes in V'. So, our task is to now check the paths between nodes of G'. If we ensure that there exists atleast one path between any two nodes in G', then there being atleast one path between each pair of vertices in G is automatically ensured, by previous statement. \\ \\
+\emph{Observation 1: There exists an edge between any two adjacent nodes in $A$} \\
+Clearly, in this case, every node is connected to every other node in A. $A_i$ is connected to $A_j$ through a path of length $j-i$ passing through $A_{i+1},A_{i+2} ... A_{j-2}, A_{j-1}$. \\ \\
+\emph{Observation 2: If there is no edge from $A_i$ to $A_{i+1}$, then $A_i$ can not be connected to $A_{i+1}$} \\
+Clearly, there can not be an edge from $A_{i+1}$ to $A_{j}$, where $j<i+1$, since they are in topological order. And since $A_i$ does not have an edge to $A_{i+1}$, thus there is no way that $A_i$ and $A_{i+1}$ can have a connection. Therefore, the claim that there exists atleast one edge between any two pair of vertices is invalid, in this case. \\ \\
+Thus, using the above observations, we show that Algorithm \ref{one} is correct.
+
+\end{document}
+
+
