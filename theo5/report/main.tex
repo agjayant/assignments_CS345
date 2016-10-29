@@ -1,0 +1,46 @@
+\documentclass{article}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\geometry{
+a4paper,
+right=20mm,
+left=20mm,
+top=20mm,
+bottom=20mm,	
+}
+
+\begin{document}
+
+\pagenumbering{gobble}
+
+\begin{center}
+\textbf{\Large Theoretical Assignment 4 : CS345} \\
+\textit{\large Jayant Agrawal}         14282 \\
+\textit{\large Shubham Pandey}         14679
+\end{center}
+
+\section{Dynamic Reachability}
+
+\begin{algorithm}
+%\caption{R}
+\label{dyn}
+\begin{algorithmic}[1]
+\Procedure{Update-R$(i,j)$}{}
+\If { R[i] is true and R[j] is false }
+\State R[j] $\gets$ true
+\For { each neighbor q of j}
+\State R[q] $\gets$ true 
+\EndFor
+\EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+
+\end{document}
+
+
