@@ -32,13 +32,76 @@ bottom=20mm,
 \Procedure{Update-R$(i,j)$}{}
 \If { R[i] is true and R[j] is false }
 \State R[j] $\gets$ true
-\For { each neighbor q of j}
-\State R[q] $\gets$ true 
+\For { each neighbor q of j} \Comment{\parbox[t]{.5\linewidth}}{ edge (j,q) $\in$ E}
+\State Update-R$(j,q)$
 \EndFor
 \EndIf
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
+
+\subsection{Potential Function}
+
+$$\phi(G) = c *(\sum_{j:R[j] = false} |Adj(j)| )$$
+
+where Adj(j) is the adjacency list of node j.
+
+\subsection{Actual Cost}
+
+Actual cost for adding edge (i,j) : \\ \\
+As we visit new vertices, we keep removing their contribution from $\phi(G)$, since the sum is over only unreached vertices. Thus, the actual cost is $\phi(G_{old}) - \phi(G_{new})$. \\ \\
+\emph{ Case 1: If both R[i] and R[j] are false:} O(1). \\
+\emph{ Case 2: If both R[i] and R[j] are true:} O(1). \\
+\emph{ Case 3: If R[i] is false and R[j] is true: }O(1) \\ \\
+\textbf{Case 4: If R[i] is true and R[j] is false: } Maximum Cost can be of O(m). In this case, we first update R[j], then do the same for all neighbors of j recursively. Since, maximum number of edges is O(m), thus the maximum cost is O(m). \\
+Also, this is equal to the sum of size of adjacency lists of all unvisited vertices reachable from j. 
+
+\subsection{ Change in Potential}
+
+
+\emph{Case 1: } In this case, only the size of Adj(i) increases by 1.\\
+\emph{Case 2: } In this case, no change in $\phi(G)$, since both (i and j) are already visited.\\
+\emph{Case 3: } Here, again size of Adj(i) increases by 1.\\
+\emph{Case 4: } $\phi(G_{new}) - \phi(G_{old})$
+
+
+\subsection{Amortized Cost}
+
+Amortized Cost is the sum of actual cost and $\Delta \phi(G)$. \\
+
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+Case & Actual Cost & $\Delta \phi(G) $ & Amortized Cost \\
+\hline
+1 & c*1 & c*1 &  2c*1 \\
+\hline
+2 & c*1 & 0 & c*1 \\
+\hline
+3 & c*1 & c*1 & 2c*1 \\
+\hline
+4 & $\phi(G_{old}) - \phi(G_{new})$ & $\phi(G_{new}) - \phi(G_{old})$ & 0 \\
+\hline
+\end{tabular}
+\end{center}
+Thus, we can conclude that amortized cost is O(1).\\
+Thus, for m such insertions, $\phi(G)$ may increase by atmost O(1) at each insertion.\\
+Actual Cost is sum of Amortized Cost and $\phi(G)$, thus, total cost is O(m).
+
+\section{Tinkering with Fibonacci heap}
+
+Initially, color all nodes to be green. After the first child is removed, color the parent yellow. After the second child is removed, change the color of parent from yellow to red and after removing the third child, remove the parent and add it to the root list. \\
+Whenever a node(yellow or red) is added to the root list, change it's color to green. Since, we do not need to remove the node any further. 
+
+\subsection{Maximum Degree of a tree}
+
+\emph{Claim: }Maximum degree of a tree in a Fibonacci Heap of size n = O($log_2(n)$) \\
+\emph{This is equivalent to: } "For a node x of degree k, size(x) is $\Omega (a^k)$ always".
+
+
+
+
 
 
 \end{document}
