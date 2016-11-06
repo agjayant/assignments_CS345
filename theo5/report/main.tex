@@ -97,12 +97,63 @@ Whenever a node(yellow or red) is added to the root list, change it's color to g
 \subsection{Maximum Degree of a tree}
 
 \emph{Claim: }Maximum degree of a tree in a Fibonacci Heap of size n = O($log_2(n)$) \\
-\emph{This is equivalent to: } "For a node x of degree k, size(x) is $\Omega (a^k)$ always".
+\emph{This is equivalent to: } "For a node x of degree k, size(x) is $\Omega (a^k)$ always". \\ \\
+\emph{Proof: } Consider a node with degree k.  \\ At the time of addition of first child($v_1$), $degree(v_1) \geq 0$. \\ At the time of addition of second node ($v_2$), $degree(v_1) \geq 1$. \\ Similarly, at the time of addition of $i^{th}$ node, $degree(v_i) \geq i-1$. But, since we can remove atmost two children from a given node we can say that:
+$$degree(v_i) \geq i-3$$
 
+We, define, $s_i$, to be the minimum size of the tree. Clearly, $s_0 = 1$, $s_1 = 2$. and  $s_2 = 3$. Now, using above arguments, we can write the following recurrence for $s_k$ :
+$$ s_k \geq 1+1+1+ \sum_{0 \leq i \leq k-3}s_i$$
+$$ s_k \geq 1+1+1+ \sum_{0 \leq i \leq k-4}s_i + s_{k-3}$$
+$$ s_k \geq s_{k-1} + s_{k-3}$$
+If we show, that there exists a $a > 1$ such that, $s_k \geq a^k$, then our proof is complete. We prove this by induction: \\
+\emph{Base Case: } k=0, Clearly, $s_0 =1  \geq a^0 $ \\
+\emph{Induction Hypothesis: } Assume that $s_j \geq a^j \hspace{5pt}\forall j \leq k-1 $. \\
+\emph{Induction Step: }To Prove: $$s_k \geq a^{k-1} + a^{k-3}$$
+This is same as proving that :
+$$\frac{a^{k-1}+ a^{k-3}}{a^k} \geq 1$$
+$$a^2 + 1  \geq  a^3$$
+$$a^3 - a^2 -1 \leq 0$$
+If the above polynomial has a root, then there exists a solution and the above inequality is satisfiable. Consider $$f(a) = a^3 - a^2 -1$$
+$$f(1) = -1 $$
+$$f(2) = 3$$
 
+Thus, by \textbf{Intermediate Value Theorem}, we show that there exists a root of $f(a)$ between 1 and 2. Therefore, there exists $a > 1$, such that $s_k \geq a^k$. 
 
+\subsection{Amortized Cost Analysis }
+\subsubsection{Potential Function}
+We define the following potential function :
+$$ \phi(H) = c*t(H) + 2c*r(H) $$
 
+where, t(H) is the total number of nodes in root list of the heap and r(H) is the total number of red nodes(defined above) in the heap.
 
+\subsubsection{Amortized Cost}
+Since, the potential function remains the same with respect to insert, merge and find-min operations, the amortized cost analysis also remains same. \\ \\
+\emph{Decrease-Key}  \\
+Actual Cost will be the change in the number of red nodes in the graph ($c*r(H_{old})- c*r(H_{new}) + c$).\\ Change in t(H) will be $r(H_{old}) - r(H_{new}) + 1$. \\ Thus, change in potential is $c*r(H_{new})- c*r(H_{old})$.
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+Actual Cost & $\Delta \phi(G) $ & Amortized Cost \\
+\hline
+$c*r(H_{old})- c*r(H_{new}) + c$ & $c*r(H_{new})- c*r(H_{old})$ & c \\
+\hline
+\end{tabular}
+\end{center}
+\emph{Extract Min} \\
+Actual Cost remains same, i.e., the size of root list ( $c*t(H_{old})$). \\
+Change in Potential will be $c*t(H_{new}) - c*t(H_{old})$. \\
+Now, using the above claim, we know that after extract min, size of root list ($t(H_{new})$) is bounded by $log(n)$.
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+Actual Cost & $\Delta \phi(G) $ & Amortized Cost \\
+\hline
+$c*t(H_{old})$ & $c*t(H_{new}) - c*t(H_{old})$ & $c*log(n)$ \\
+\hline
+\end{tabular}
+\end{center}
 
 \end{document}
 
