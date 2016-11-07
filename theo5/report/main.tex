@@ -1,0 +1,160 @@
+\documentclass{article}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\geometry{
+a4paper,
+right=20mm,
+left=20mm,
+top=20mm,
+bottom=20mm,	
+}
+
+\begin{document}
+
+\pagenumbering{gobble}
+
+\begin{center}
+\textbf{\Large Theoretical Assignment 4 : CS345} \\
+\textit{\large Jayant Agrawal}         14282 \\
+\textit{\large Shubham Pandey}         14679
+\end{center}
+
+\section{Dynamic Reachability}
+
+\begin{algorithm}
+%\caption{R}
+\label{dyn}
+\begin{algorithmic}[1]
+\Procedure{Update-R$(i,j)$}{}
+\If { R[i] is true and R[j] is false }
+\State R[j] $\gets$ true
+\For { each neighbor q of j} \Comment{\parbox[t]{.5\linewidth}}{ edge (j,q) $\in$ E}
+\State Update-R$(j,q)$
+\EndFor
+\EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Potential Function}
+
+$$\phi(G) = c *(\sum_{j:R[j] = false} |Adj(j)| )$$
+
+where Adj(j) is the adjacency list of node j.
+
+\subsection{Actual Cost}
+
+Actual cost for adding edge (i,j) : \\ \\
+As we visit new vertices, we keep removing their contribution from $\phi(G)$, since the sum is over only unreached vertices. Thus, the actual cost is $\phi(G_{old}) - \phi(G_{new})$. \\ \\
+\emph{ Case 1: If both R[i] and R[j] are false:} O(1). \\
+\emph{ Case 2: If both R[i] and R[j] are true:} O(1). \\
+\emph{ Case 3: If R[i] is false and R[j] is true: }O(1) \\ \\
+\textbf{Case 4: If R[i] is true and R[j] is false: } Maximum Cost can be of O(m). In this case, we first update R[j], then do the same for all neighbors of j recursively. Since, maximum number of edges is O(m), thus the maximum cost is O(m). \\
+Also, this is equal to the sum of size of adjacency lists of all unvisited vertices reachable from j. 
+
+\subsection{ Change in Potential}
+
+
+\emph{Case 1: } In this case, only the size of Adj(i) increases by 1.\\
+\emph{Case 2: } In this case, no change in $\phi(G)$, since both (i and j) are already visited.\\
+\emph{Case 3: } Here, again size of Adj(i) increases by 1.\\
+\emph{Case 4: } $\phi(G_{new}) - \phi(G_{old})$
+
+
+\subsection{Amortized Cost}
+
+Amortized Cost is the sum of actual cost and $\Delta \phi(G)$. \\
+
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+Case & Actual Cost & $\Delta \phi(G) $ & Amortized Cost \\
+\hline
+1 & c*1 & c*1 &  2c*1 \\
+\hline
+2 & c*1 & 0 & c*1 \\
+\hline
+3 & c*1 & c*1 & 2c*1 \\
+\hline
+4 & $\phi(G_{old}) - \phi(G_{new})$ & $\phi(G_{new}) - \phi(G_{old})$ & 0 \\
+\hline
+\end{tabular}
+\end{center}
+Thus, we can conclude that amortized cost is O(1).\\
+Thus, for m such insertions, $\phi(G)$ may increase by atmost O(1) at each insertion.\\
+Actual Cost is sum of Amortized Cost and $\phi(G)$, thus, total cost is O(m).
+
+\section{Tinkering with Fibonacci heap}
+
+Initially, color all nodes to be green. After the first child is removed, color the parent yellow. After the second child is removed, change the color of parent from yellow to red and after removing the third child, remove the parent and add it to the root list. \\
+Whenever a node(yellow or red) is added to the root list, change it's color to green. Since, we do not need to remove the node any further. 
+
+\subsection{Maximum Degree of a tree}
+
+\emph{Claim: }Maximum degree of a tree in a Fibonacci Heap of size n = O($log_2(n)$) \\
+\emph{This is equivalent to: } "For a node x of degree k, size(x) is $\Omega (a^k)$ always". \\ \\
+\emph{Proof: } Consider a node with degree k.  \\ At the time of addition of first child($v_1$), $degree(v_1) \geq 0$. \\ At the time of addition of second node ($v_2$), $degree(v_1) \geq 1$. \\ Similarly, at the time of addition of $i^{th}$ node, $degree(v_i) \geq i-1$. But, since we can remove atmost two children from a given node we can say that:
+$$degree(v_i) \geq i-3$$
+
+We, define, $s_i$, to be the minimum size of the tree. Clearly, $s_0 = 1$, $s_1 = 2$. and  $s_2 = 3$. Now, using above arguments, we can write the following recurrence for $s_k$ :
+$$ s_k \geq 1+1+1+ \sum_{0 \leq i \leq k-3}s_i$$
+$$ s_k \geq 1+1+1+ \sum_{0 \leq i \leq k-4}s_i + s_{k-3}$$
+$$ s_k \geq s_{k-1} + s_{k-3}$$
+If we show, that there exists a $a > 1$ such that, $s_k \geq a^k$, then our proof is complete. We prove this by induction: \\
+\emph{Base Case: } k=0, Clearly, $s_0 =1  \geq a^0 $ \\
+\emph{Induction Hypothesis: } Assume that $s_j \geq a^j \hspace{5pt}\forall j \leq k-1 $. \\
+\emph{Induction Step: }To Prove: $$s_k \geq a^{k-1} + a^{k-3}$$
+This is same as proving that :
+$$\frac{a^{k-1}+ a^{k-3}}{a^k} \geq 1$$
+$$a^2 + 1  \geq  a^3$$
+$$a^3 - a^2 -1 \leq 0$$
+If the above polynomial has a root, then there exists a solution and the above inequality is satisfiable. Consider $$f(a) = a^3 - a^2 -1$$
+$$f(1) = -1 $$
+$$f(2) = 3$$
+
+Thus, by \textbf{Intermediate Value Theorem}, we show that there exists a root of $f(a)$ between 1 and 2. Therefore, there exists $a > 1$, such that $s_k \geq a^k$. 
+
+\subsection{Amortized Cost Analysis }
+\subsubsection{Potential Function}
+We define the following potential function :
+$$ \phi(H) = c*t(H) + 2c*r(H) $$
+
+where, t(H) is the total number of nodes in root list of the heap and r(H) is the total number of red nodes(defined above) in the heap.
+
+\subsubsection{Amortized Cost}
+Since, the potential function remains the same with respect to insert, merge and find-min operations, the amortized cost analysis also remains same. \\ \\
+\emph{Decrease-Key}  \\
+Actual Cost will be the change in the number of red nodes in the graph ($c*r(H_{old})- c*r(H_{new}) + c$).\\ Change in t(H) will be $r(H_{old}) - r(H_{new}) + 1$. \\ Thus, change in potential is $c*r(H_{new})- c*r(H_{old})$.
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+Actual Cost & $\Delta \phi(G) $ & Amortized Cost \\
+\hline
+$c*r(H_{old})- c*r(H_{new}) + c$ & $c*r(H_{new})- c*r(H_{old})$ & c \\
+\hline
+\end{tabular}
+\end{center}
+\emph{Extract Min} \\
+Actual Cost remains same, i.e., the size of root list ( $c*t(H_{old})$). \\
+Change in Potential will be $c*t(H_{new}) - c*t(H_{old})$. \\
+Now, using the above claim, we know that after extract min, size of root list ($t(H_{new})$) is bounded by $log(n)$.
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+Actual Cost & $\Delta \phi(G) $ & Amortized Cost \\
+\hline
+$c*t(H_{old})$ & $c*t(H_{new}) - c*t(H_{old})$ & $c*log(n)$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\end{document}
+
+

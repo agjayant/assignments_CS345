@@ -1,0 +1,207 @@
+\documentclass{article}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\geometry{
+a4paper,
+right=20mm,
+left=20mm,
+top=20mm,
+bottom=20mm,	
+}
+
+\begin{document}
+
+\pagenumbering{gobble}
+
+\begin{center}
+\textbf{\Large Theoretical Assignment 4 : CS345} \\
+\textit{\large Jayant Agrawal}         14282 \\
+\textit{\large Shubham Pandey}         14679
+\end{center}
+
+\section{Job Scheduling}
+% C'mon Pandey -> You can do it :-)
+\subsection{Increasing Deadline time}
+\label{incr}
+\textbf{Assumption: } Suppose in an optimal scheduling, two jobs($J_i$ and $J_{i+1}$) scheduled at positions i and i+1, with finish time $d_i$ and $d_{i+1}$, where $d_i > d_{i+1}$. \\ 
+\textbf{Claim: } Swapping these jobs will still give an optimal scheduling. \\ 
+\textbf{Proof} \\ 
+\begin{equation*}
+\begin{aligned}
+s_i + t_i &\leq d_i  &\hspace{4cm}  \text{(By scheduling Algorithm)} \\
+s_{i+1} + t_{i+1} &\leq d_{i+1} &\hspace{4cm}   \text{(By scheduling Algorithm)} \\
+s_{i+1} &> s_i &\hspace{4cm} \text{(By Scheduling Algorithm)}\\
+\end{aligned}
+\end{equation*}
+
+Now, swapping jobs $J_i$ and $J_{i+1}$ will result in:
+$$ s_i < s_{i+1} \implies s_i + t_{i+1} \leq d_{i+1} $$
+$$ s_{i+1} + t_{i+1} \leq d_{i+1} \implies   s_i + t_{i+1} +t_{i} \leq d_{i+1} $$ 
+$$ d_i > d_{i+1}  \implies s_i + t_{i+1} +t_{i} \leq d_{i+1} \leq d_i $$
+$$ s_i + t_{i+1} +t_{i} \leq d_{i} $$
+
+So, we can infer that even after swapping jobs $J_i$ and $J_{i+1}$, which were initially scheduled by decreasing order of finish time, will still be an optimal scheduling. \\ \\
+\textbf{Claim:} Infering from previous claim, we can show that their exist an optimal solution in which jobs are scheduled according to increasing order of deadline. \\
+\textbf{Proof} 
+\begin{itemize}
+\item We can swap two consecutive jobs if they are not scheduled according to deadline.
+\item Start from first job in a manner similar to insertion sort. 
+\item For $i^{th}$ job keep swapping it with jobs scheduled previous to it until it reaches a place where no further swapping is possible.
+\item After following the above steps, we will get an optimal scheduling with increasing order of deadline.
+\end{itemize}
+
+
+\subsection{Scheduling Algorithm}
+\subsubsection{Intuition}
+Taking inspiration from above proof, we first sort the jobs in increasing order of deadlines. 
+
+\subsubsection{Algorithm}
+Consider Jobs(T,k) to be the maximum number of jobs that can be scheduled till time T from the set of first k jobs in sorted order. If at any k, the maximum time(T-$t_k$) falls below s, then we do not consider the kth job from our set and call Jobs(T,k-1). Otherwise, we consider the following two cases and take the maximum of the two :
+\begin{itemize}
+\item If the $k^{th}$ job is scheduled, then we call Jobs($T-t_k$,k-1)+1, since now the time has to be updated to $T-t_k$.
+\item If the $k^{th}$ job is not scheduled, then we simply call Jobs(T,k-1) and do not consider $k^{th}$ job, using the theorem proved in \ref{incr}.
+\end{itemize}
+
+\begin{algorithm}[h!]
+\caption{Recursive Formulation}
+\label{job}
+\begin{algorithmic}[1]
+\Procedure{Jobs($T,k$)}{}
+\If {T == 0 or k == 0}
+\State \Return 0
+\EndIf
+\If {T-$t_k$ $\geq$ s and $d_k \geq T$}
+\State \Return  max( Jobs(T,k-1),  Jobs(T-$t_k$,k-1)+1 ) 
+\Else
+\State \Return Jobs(T, k-1)
+\EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+\newpage
+\subsubsection{Iterative Algorithm}
+\label{iter}
+Consider Iterative Algorithm (\ref{jobiter}) of time complexity O($nD$), where we build the table in bottom-up fashion.
+\begin{algorithm}
+\caption{Iterative Algorithm}
+\label{jobiter}
+\begin{algorithmic}[1]
+\Procedure{JobsOpt($D,n$)}{}
+\State OptJobs[D+1][n+1] \Comment{\parbox[t]{.5\linewidth}}{Table to Store results of Sub-problems}
+\For {i=1 to D }
+\State OptJobs[i][0] $\gets$ 0
+\EndFor
+\For {j=1 to n}
+\State OptJobs[0][j] $\gets$ 0
+\EndFor
+\For {l=1 to n }
+\For {i=1 to D}
+\If { $d_l \geq$ i and $i-t_k \geq s$}
+\State OptJobs[i][l] $\gets$ max( OptJobs[i][l-1],  OptJobs[i-$t_l$][l-1]+1 )
+\Else
+\State OptJobs[i][l] $\gets$ OptJobs[i][l-1]
+\EndIf
+\EndFor
+\EndFor
+\State \Return OptJobs[D][n]
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+\par To output the optimal sequence of Jobs, we will maintain a list for each entry updation and we will append the last entry to the previous list. \\
+\emph{Alternatively: }Each Entry has two alternate decision paths, out of which is chooses one. To get the optimal job sequence, keep a pointer to the chosen path. Now, call OptJobs(D,n) and keep backtracking the pointers to get the optimal sequence. We can thus get the sequence in time O(n).
+
+\subsubsection{Time Complexity}
+\emph{Size of Table :} D*n \\
+\emph{Time for each entry computation: }O(1)\\
+\emph{Total Time: } O(nD)  
+
+\section{Buying and Selling Multiple Times}
+
+\subsection{Algorithm}
+Consider SHARE(i,l) to be the maximum profit that can be earned till day 'i' using l-shot strategy. We consider two cases to get SHARE(i,l) and take the maximum of the two.
+\begin{itemize}
+\item Share not selled at day i. Then,we need to consider SHARE(i-1.l).
+\item Share selled at day i. Then we need to find the (l-1)-shot strategy for a day j, such that SHARE(j,l-1) + price(i)- price(j) is maximum (j varies from 1 to i).
+\end{itemize}
+Consider the following recursive formulation of the above algorithm(\ref{rec}).
+\newpage
+\begin{algorithm}[h!]
+\caption{Recursive Formulation}
+\label{rec}
+\begin{algorithmic}[1]
+\Procedure{Share($i,l$)}{}
+\If {i == 0 or l == 0}
+\State \Return 0
+\EndIf
+\State $MaxSell \gets max_{0 \leq j \leq i}( SHARE(j,l-1) + price(i)- price(j) )$  
+\State \Return max( SHARE(i-1,l),  MaxSell )
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Iterative Algorithm}
+Consider Iterative Algorithm (\ref{share}) of time complexity O($n^2k$), where we build the table in bottom-up fashion.
+\begin{algorithm}[h!]
+\caption{Iterative Algorithm}
+\label{share}
+\begin{algorithmic}[1]
+\Procedure{ShareIter($k,n$)}{}
+\State ShareProfit[k+1][n+1] \Comment{\parbox[t]{.5\linewidth}}{Table to Store results of Sub-problems}
+\For {i=1 to k }
+\State ShareProfit[i][0] $\gets$ 0
+\EndFor
+\For {j=1 to n}
+\State ShareProfit[0][j] $\gets$ 0
+\EndFor
+\For {i=1 to k }
+\For {l=1 to N-1}
+\State $MaxSell \gets max_{0 \leq j<i}( ShareProfit[j][l-1] + price(i)- price(j) )$  \Comment{\parbox[t]{.2\linewidth}}{O(n)}
+\State ShareProfit[i][l] $\gets$ max(ShareProfit[i][l-1],MaxSell)
+\EndFor
+\EndFor
+\State \Return ShareProfit[k][n-1]
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+To optimise this algorithm, we can complete the O(n) step for updating each entry of the table in O(1) time. This can be done by simply storing the prevMax in the following way.
+\begin{algorithm}[h!]
+\caption{Optimized Iterative Algorithm}
+\label{opt}
+\begin{algorithmic}[1]
+\Procedure{OptShare($k,n$)}{}
+\State ShareProfit[k+1][n+1] \Comment{\parbox[t]{.5\linewidth}}{Table to Store results of Sub-problems}
+\For {i=1 to k }
+\State ShareProfit[i][0] $\gets$ 0
+\EndFor
+\For {j=1 to n}
+\State ShareProfit[0][j] $\gets$ 0
+\EndFor
+\For {i=1 to k }
+\State prevMax $\gets$ Large Negative value
+\For {l=1 to N-1}
+\State prevMax $\gets$ max(prevMax, ShareProfit[i-1][l-1]-price[l-1]) \Comment{\parbox[t]{.2\linewidth}}{O(1)}
+\State ShareProfit[i][l] $\gets$ max(ShareProfit[i][l-1],price[j]+prevMax)
+\EndFor
+\EndFor
+\State \Return ShareProfit[k][n-1]
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+To output the sequence of days along with the maximum profit, we should maintain a list of the best strategy till a given day. For updating we can simply append the pair of days to the previous list.
+\emph{Alternatively,} We can have a similar procedure that we had in \ref{iter}, where we kept the pointers pointing to the previous max strategy and kept backtracking in the end to get the k-shot strategy in O(n) time.
+
+\subsection{Time Complexity}
+\emph{Algorithm \ref{rec}: } Exponential, since each call makes more than one recursive calls.\\
+\emph{Algorithm \ref{share}: } For updating each entry, we are taking O(n) time and the size of table is O(nk). Total Time Taken: O($n^2k$)\\
+\emph{ALgorithm \ref{opt}: } Here we take only O(1) time for each entry. Thus, total Time : O(nk).
+
+
+\end{document}
+
+
